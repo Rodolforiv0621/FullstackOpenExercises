@@ -12,7 +12,7 @@ blogsRouter.get('/', async (request, response) =>{
 blogsRouter.post('/', async (request, response) =>{
   let body = request.body
 
-  const user = await User.findById(request.token.id)
+  const user = request.user
 
   let like = 'likes' in body? body.likes : 0
   // let users = await User.find({})
