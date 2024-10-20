@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import Message from './components/displayMessage'
+import Message from './components/DisplayMessage'
+import CreateBlogForm from './components/CreateBlogForm'
+import Togglable from './components/togglable'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -10,12 +12,11 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [displayMessage, setdisplayMessage] =  useState(null)
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   
-
+  
+  
   useEffect(() => {
+    
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
   
     if (loggedUserJSON && loggedUserJSON !== "undefined") {
@@ -28,11 +29,23 @@ const App = () => {
   }, [])
 
   const getAllBlogs = () =>{
-    blogService.getAll().then(blogs =>
-        setBlogs( blogs )
-      )  
+    
+    blogService.getAll().then(blogs =>{
+      if(blogs === 'error'){
+        setdisplayMessage({
+          message: `Invalid JWT token, sign out and sign back in`,
+          color: "red",
+        });
+        setTimeout(() => {
+          setdisplayMessage(null);
+        }, 4000);
+      }
+      setBlogs( blogs )
+    })  
+    
+    
   }
-
+  
   const handleLogin = async (e) =>{
     e.preventDefault();
     try{
@@ -56,7 +69,7 @@ const App = () => {
     
   }
 
-  const handleCreateBlog = async ()=>{
+  const handleCreateBlog = async (title, author, url) => {
     if(title === '' || author === '' || url === '') return
     try{
       const newBlog = blogService.create(title, author, url)
@@ -64,13 +77,18 @@ const App = () => {
         message: `a new blog ${title} by ${author} added`,
         color: 'green'
       })
+      setTimeout(() => {
+        setdisplayMessage(null);
+      }, 4000);
     }catch(e){
       setdisplayMessage({
         message: "Could not create new blog",
         color: 'red'
       })
+      setTimeout(() => {
+        setdisplayMessage(null);
+      }, 4000);
     }
-    
   }
 
   const loginForm = () =>{
@@ -103,6 +121,17 @@ const App = () => {
     );
   }
 
+  const createBlogForm = () =>{
+
+    return(
+      <Togglable buttonLabel={"Create Blog"}>
+        <CreateBlogForm 
+          createBlog = {handleCreateBlog}
+        />
+      </Togglable>
+    )
+  }
+
   const blogForm = () =>{
     return (
       <div>
@@ -122,29 +151,18 @@ const App = () => {
           <br />
           <br />
         </div>
-        <div>
-          <h2>Create New Blog</h2>
-
-          <div>
-            title:
-            <input type="text" name="title" value={title} onChange={({target}) => setTitle(target.value)}/>
-          </div>
-          <div>
-            author:
-            <input type="text" name='author' value={author} onChange={({target}) => setAuthor(target.value)} />
-          </div>
-          <div>
-            url:
-            <input type="text" name='url' value={url} onChange={({target}) => setUrl(target.value)} />
-          </div>
-          <button onClick={handleCreateBlog}>Create</button>
-        </div>
+        {createBlogForm()}
         {blogs.map((blog) => (
-          <Blog key={blog.id} blog={blog} />
+          <div>
+            <Blog key={blog.id} blog={blog} /><button>View</button>
+            
+          </div>
+          
         ))}
       </div>
     );
   }
+
   return (
     <div>
     {user === null ? loginForm() : blogForm()}

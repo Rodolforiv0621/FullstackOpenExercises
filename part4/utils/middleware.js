@@ -61,7 +61,7 @@ const tokenExtractor = async (request, response, next) =>{
 
 const userExtractor = async (request, response, next) =>{
   const user = await User.findById(request.token.id)
-  console.log("User from userExtracter: ", user)
+  
   if(!user){
     return response.status(400).json({error: "No user"})
   }
