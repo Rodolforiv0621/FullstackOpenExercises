@@ -29,7 +29,7 @@ const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
     <div style={blogStyle}>
       {show ? (
         <div className='blog'>
-          {blog.title} {blog.author} <button onClick={viewDetails}>View</button>
+          {blog.title} {blog.author} <button onClick={viewDetails}>view</button>
         </div>
       ) : (
         <div>
