@@ -15,8 +15,6 @@ const getAll = async () => {
     const response = await axios.get(baseUrl, config)
     return response.data
   }catch(error){
-    
-    console.log(error.message)
     return "error"
   }
   
@@ -29,8 +27,18 @@ const create = async (title, author, url) =>{
     author: author,
     url: url,
   }
-  const response = axios.post(baseUrl, blog, config)
+  const response = await axios.post(baseUrl, blog, config)
   return response.data
 }
 
-export default { getAll, setToken, create }
+const updateLikes = async (blog) => {
+  const response = await axios.put(`${baseUrl}/${blog.id}`, blog, config)
+  return response.data
+}
+
+const remove = async (id) => {
+  const response = await axios.delete(`${baseUrl}/${id}`, config)
+  return response.data
+}
+
+export default { getAll, setToken, create, updateLikes, remove }
