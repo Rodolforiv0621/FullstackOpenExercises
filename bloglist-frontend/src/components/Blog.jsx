@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState } from 'react'
 
 const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
   const [show, setShow] = useState(true)
   const blogStyle = {
     paddingTop: 10,
     paddingLeft: 2,
-    border: "solid",
+    border: 'solid',
     borderWidth: 1,
     marginBottom: 5,
-  };
+  }
 
   const viewDetails = () => {
     setShow(!show)
@@ -22,7 +22,7 @@ const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
     if(window.confirm(`Remove blog ${blog.title} by ${blog.author}`)){
       handleDeleteBlog(blog.id)
     }
-    
+
   }
 
   return (
@@ -45,8 +45,8 @@ const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
         </div>
       )}
     </div>
-  );
-  
+  )
+
 }
 
 export default Blog

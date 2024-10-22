@@ -5,9 +5,9 @@ import Message from '../components/DisplayMessage'
 let token = null
 let config = null
 
-const setToken = newToken =>{
+const setToken = newToken => {
   token = `Bearer ${newToken}`
-  config = {headers: {Authorization: token}}
+  config = { headers: { Authorization: token } }
 }
 
 const getAll = async () => {
@@ -15,12 +15,12 @@ const getAll = async () => {
     const response = await axios.get(baseUrl, config)
     return response.data
   }catch(error){
-    return "error"
+    return 'error'
   }
-  
+
 }
 
-const create = async (title, author, url) =>{
+const create = async (title, author, url) => {
   // Could pass in object already structered instead of creating object here
   let blog = {
     title: title,
