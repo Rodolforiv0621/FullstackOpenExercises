@@ -29,6 +29,12 @@ const App = () => {
 
   }, [])
 
+
+  const sortBlogs = (blogs) => {
+    blogs = blogs.sort((a, b) => b.likes - a.likes)
+    return blogs
+  }
+
   const getAllBlogs = (user) => {
 
     blogService.getAll().then(blogs => {
@@ -36,7 +42,8 @@ const App = () => {
         window.localStorage.removeItem('loggedBlogappUser')
         setUser(null)
       }
-      blogs = blogs.sort((a, b) => b.likes - a.likes)
+
+      blogs = sortBlogs(blogs)
 
       blogs = blogs.map((blog) => {
 
@@ -51,6 +58,8 @@ const App = () => {
 
 
   }
+
+
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -69,7 +78,7 @@ const App = () => {
       })
       setTimeout(() => {
         setdisplayMessage(null)
-      }, 4000)
+      }, 2500)
     }
 
 
@@ -92,7 +101,7 @@ const App = () => {
       setTimeout(() => {
         setdisplayMessage(null)
 
-      }, 4000)
+      }, 2500)
 
     }catch(e){
       setdisplayMessage({
@@ -101,13 +110,17 @@ const App = () => {
       })
       setTimeout(() => {
         setdisplayMessage(null)
-      }, 4000)
+      }, 2500)
     }
   }
 
   const handleUpdateLikes = async (blog) => {
+    const currentUser = blog.currentUser
     const newBlog = await blogService.updateLikes(blog)
-    setBlogs(blogs => blogs.map(blog => blog.id === newBlog.id ? newBlog : blog))
+    let sortedBlogs = blogs
+    sortedBlogs = sortedBlogs.map(blog => blog.id === newBlog.id ? { ...newBlog, currentUser: currentUser } : blog )
+    sortedBlogs = sortBlogs(sortedBlogs)
+    setBlogs(sortedBlogs)
   }
 
   const handleDelete = async (id) => {
@@ -126,6 +139,7 @@ const App = () => {
           <input
             type="text"
             value={username}
+            data-testid="username"
             name="username"
             onChange={({ target }) => setUsername(target.value)}
           />
@@ -135,6 +149,7 @@ const App = () => {
           <input
             type="password"
             value={password}
+            data-testid="password"
             name="password"
             onChange={({ target }) => setPassword(target.value)}
           />

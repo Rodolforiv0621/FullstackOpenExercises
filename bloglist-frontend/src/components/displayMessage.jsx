@@ -11,7 +11,7 @@ const Message = ({ errorMessage }) => {
     padding: 10,
     marginBottom: 10,
   }
-  return <div style={messageStyle}>{errorMessage.message}</div>
+  return <div style={messageStyle} className="error">{errorMessage.message}</div>
 }
 
 export default Message

@@ -5,7 +5,6 @@ const User = require('../models/user')
 blogsRouter.get('/', async (request, response) =>{
   // The object in the end is mongoose syntax for the fields you want to show
   result = await Blog.find({}).populate('user', {username: 1, name: 1, _id: 1})
-  
   response.json(result);   
 })
 
