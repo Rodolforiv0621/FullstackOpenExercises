@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { voteAnecdote } from "../reducers/anecdoteReducer";
+import {  addLike } from "../reducers/anecdoteReducer";
 import { showNotification } from "../reducers/notificationReducer";
 
 const AnecdoteList = () =>{
@@ -9,9 +9,9 @@ const AnecdoteList = () =>{
 
     const filteredAnecdotes = anecdotes.filter(anecdotes => anecdotes.content.toLowerCase().includes(filter.toLowerCase()))
 
-    const vote = (id, content) => {
-      dispatch(voteAnecdote(id));
-      dispatch(showNotification(content))
+    const vote = (anecdote) => {
+      dispatch(addLike(anecdote));
+      dispatch(showNotification(anecdote.content, 5000))
     };
 
     return(
@@ -23,7 +23,7 @@ const AnecdoteList = () =>{
                 </div>
                 <div>
                     has {anecdote.votes}
-                    <button onClick={() => vote(anecdote.id, anecdote.content)}>vote</button>
+                    <button onClick={() => vote(anecdote)}>vote</button>
                 </div>
                 </div>
             )}
