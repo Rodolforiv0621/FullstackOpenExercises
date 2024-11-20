@@ -5,13 +5,19 @@ import loginService from './services/login'
 import Message from './components/DisplayMessage'
 import CreateBlogForm from './components/CreateBlogForm'
 import Togglable from './components/togglable'
+import { showNotification } from './reducers/notificationReducer'
+import { useDispatch, useSelector } from 'react-redux'
+import { initializeBlogs, setBlogs } from "./reducers/blogsReducer"
+import { setUser } from './reducers/userReducer'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
-  const [user, setUser] = useState(null)
+  const dispatch = useDispatch()
+  // const [blogs, setBlogs] = useState([])
+  // const [user, setUser] = useState(null)
+  const user = useSelector(state => state.user)
+  const blogs = useSelector(state => state.blogs)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [displayMessage, setdisplayMessage] =  useState(null)
 
   const blogFormRef = useRef()
 
@@ -22,11 +28,13 @@ const App = () => {
 
     if (loggedUserJSON && loggedUserJSON !== 'undefined') {
       let user = JSON.parse(loggedUserJSON)
-      setUser(user)
+      dispatch(setUser(user))
       blogService.setToken(user.token)
-      getAllBlogs(user)
+      dispatch(initializeBlogs())
+      // getAllBlogs(user)
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
 
@@ -35,29 +43,10 @@ const App = () => {
     return blogs
   }
 
-  const getAllBlogs = (user) => {
-
-    blogService.getAll().then(blogs => {
-      if(blogs === 'error'){
-        window.localStorage.removeItem('loggedBlogappUser')
-        setUser(null)
-      }
-
-      blogs = sortBlogs(blogs)
-
-      blogs = blogs.map((blog) => {
-
-        return ({
-          ...blog,
-          currentUser: user && blog.user? user.username === blog.user.username : false
-        })
-      })
-
-      setBlogs( blogs )
-    })
+  // const getAllBlogs = (user) => {
 
 
-  }
+  // }
 
 
 
@@ -66,19 +55,16 @@ const App = () => {
     try{
       const user = await loginService.login(username, password)
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
-      setUser(user)
+      dispatch(setUser(user))
       blogService.setToken(user.token)
       setUsername('')
       setPassword('')
-      getAllBlogs()
+      dispatch(initializeBlogs())
     }catch(exception){
-      setdisplayMessage({
-        message: 'Wrong username or password',
+      dispatch(showNotification({
+        content: 'Wrong username or password',
         color: 'red',
-      })
-      setTimeout(() => {
-        setdisplayMessage(null)
-      }, 2500)
+      }, 5000))
     }
 
 
@@ -89,28 +75,18 @@ const App = () => {
     blogFormRef.current.toggleVisibility()
     try{
       let newBlog = await blogService.create(title, author, url)
-      console.log(newBlog)
       newBlog = { ...newBlog, currentUser: true }
-      console.log(newBlog)
-      setBlogs(blogs.concat(newBlog))
+      dispatch(setBlogs(blogs.concat(newBlog)))
 
-      setdisplayMessage({
-        message: `a new blog ${title} by ${author} added`,
+      dispatch(showNotification({
+        content: `a new blog ${title} by ${author} added`,
         color: 'green'
-      })
-      setTimeout(() => {
-        setdisplayMessage(null)
-
-      }, 2500)
-
+      }, 2500))
     }catch(e){
-      setdisplayMessage({
-        message: 'Could not create new blog',
+      dispatch(showNotification({
+        content: 'Could not create new blog',
         color: 'red'
-      })
-      setTimeout(() => {
-        setdisplayMessage(null)
-      }, 2500)
+      }, 2500))
     }
   }
 
@@ -120,12 +96,13 @@ const App = () => {
     let sortedBlogs = blogs
     sortedBlogs = sortedBlogs.map(blog => blog.id === newBlog.id ? { ...newBlog, currentUser: currentUser } : blog )
     sortedBlogs = sortBlogs(sortedBlogs)
-    setBlogs(sortedBlogs)
+    dispatch(setBlogs(sortedBlogs))
   }
 
   const handleDelete = async (id) => {
     const removedBlog = await blogService.remove(id)
-    setBlogs((blogs) => blogs.filter((blog) => blog.id !== removedBlog.id))
+    let newBlogs = blogs.filter((blog) => blog.id !== removedBlog.id)
+    dispatch(setBlogs(newBlogs))
   }
 
   const loginForm = () => {
@@ -133,7 +110,7 @@ const App = () => {
 
       <form onSubmit={handleLogin}>
         <h2>Log in</h2>
-        <Message errorMessage={displayMessage} />
+        <Message />
         <div>
           username
           <input
@@ -175,7 +152,7 @@ const App = () => {
     return (
       <div>
         <h2>blogs</h2>
-        <Message errorMessage={displayMessage} />
+        <Message />
         <div>
           {' '}
           {user.name} logged in

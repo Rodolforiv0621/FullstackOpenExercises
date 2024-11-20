@@ -8,9 +8,9 @@ import CreateBlogForm from './CreateBlogForm'
 
 test('renders content', () => {
   const blog = {
-    title: "Component testing is done with react-testing-library",
-    author: "Ro",
-    url: "youtube.com",
+    title: 'Component testing is done with react-testing-library',
+    author: 'Ro',
+    url: 'youtube.com',
     likes: 12,
     currentUser: false
   }
@@ -21,11 +21,11 @@ test('renders content', () => {
   expect(element).toBeDefined()
 })
 
-test('does not render likes or url by default', ()=>{
-    const blog = {
-    title: "Component testing is done with react-testing-library",
-    author: "Ro",
-    url: "youtube.com",
+test('does not render likes or url by default', () => {
+  const blog = {
+    title: 'Component testing is done with react-testing-library',
+    author: 'Ro',
+    url: 'youtube.com',
     likes: 12,
     currentUser: false
   }
@@ -36,69 +36,69 @@ test('does not render likes or url by default', ()=>{
   expect(element).toBeNull()
 })
 
-test('url and likes are shown after clicking show', async ()=>{
-    const blog = {
-      title: "Component testing is done with react-testing-library",
-      author: "Ro",
-      url: "youtube.com",
-      likes: 12,
-      currentUser: false,
-    };
-
-    render(<Blog blog={blog}/>)
-
-    const user = userEvent.setup()
-    const button = screen.getByText('view')
-    await user.click(button)
-    const div = screen.getByText('youtube.com')
-    const div2 = screen.getByText(12)
-    expect(div).toBeDefined()
-    expect(div2).toBeDefined()
-})
-
-test("tests clicking like button twice", async () => {
+test('url and likes are shown after clicking show', async () => {
   const blog = {
-    title: "Component testing is done with react-testing-library",
-    author: "Ro",
-    url: "youtube.com",
+    title: 'Component testing is done with react-testing-library',
+    author: 'Ro',
+    url: 'youtube.com',
     likes: 12,
     currentUser: false,
-  };
-  const mockHandler = vi.fn();
+  }
 
-  render(<Blog blog={blog} handleUpdateLikes={mockHandler}/>);
+  render(<Blog blog={blog}/>)
 
-  const user = userEvent.setup();
-  const button = screen.getByText("view");
-  await user.click(button);
-  const likeButton = screen.getByText("like");
+  const user = userEvent.setup()
+  const button = screen.getByText('view')
+  await user.click(button)
+  const div = screen.getByText('youtube.com')
+  const div2 = screen.getByText(12)
+  expect(div).toBeDefined()
+  expect(div2).toBeDefined()
+})
+
+test('tests clicking like button twice', async () => {
+  const blog = {
+    title: 'Component testing is done with react-testing-library',
+    author: 'Ro',
+    url: 'youtube.com',
+    likes: 12,
+    currentUser: false,
+  }
+  const mockHandler = vi.fn()
+
+  render(<Blog blog={blog} handleUpdateLikes={mockHandler}/>)
+
+  const user = userEvent.setup()
+  const button = screen.getByText('view')
+  await user.click(button)
+  const likeButton = screen.getByText('like')
   await user.click(likeButton)
   await user.click(likeButton)
-  
-  expect(mockHandler.mock.calls).toHaveLength(2);
-});
 
-test('test create blog props recieved', async ()=>{
-    const mockHandler = vi.fn();
+  expect(mockHandler.mock.calls).toHaveLength(2)
+})
 
-    render(<CreateBlogForm createBlog={mockHandler} />)
+test('test create blog props recieved', async () => {
+  const mockHandler = vi.fn()
 
-    const user = userEvent.setup();
+  render(<CreateBlogForm createBlog={mockHandler} />)
 
-    const titleInput = screen.getByPlaceholderText('Write title')
-    const authorInput = screen.getByPlaceholderText('Write author name')
-    const urlInput = screen.getByPlaceholderText('Write url')
-    const button = screen.getByText('Create')
+  const user = userEvent.setup()
 
-    await user.type(titleInput, 'The great world series')
-    await user.type(authorInput, 'Ro')
-    await user.type(urlInput, 'youtube.com')
-    await user.click(button)
+  const titleInput = screen.getByPlaceholderText('Write title')
+  const authorInput = screen.getByPlaceholderText('Write author name')
+  const urlInput = screen.getByPlaceholderText('Write url')
+  const button = screen.getByText('Create')
 
-    expect(mockHandler.mock.calls).toHaveLength(1)
-    expect(mockHandler.mock.calls[0][0]).toBe('The great world series')
-    expect(mockHandler.mock.calls[0][1]).toBe("Ro")
-    expect(mockHandler.mock.calls[0][2]).toBe("youtube.com")
+  await user.type(titleInput, 'The great world series')
+  await user.type(authorInput, 'Ro')
+  await user.type(urlInput, 'youtube.com')
+  await user.click(button)
 
-    // expect(mockHandler.mock.calls[0][0].content).toBe("testing a form...");
+  expect(mockHandler.mock.calls).toHaveLength(1)
+  expect(mockHandler.mock.calls[0][0]).toBe('The great world series')
+  expect(mockHandler.mock.calls[0][1]).toBe('Ro')
+  expect(mockHandler.mock.calls[0][2]).toBe('youtube.com')
+
+  // expect(mockHandler.mock.calls[0][0].content).toBe("testing a form...");
 })
