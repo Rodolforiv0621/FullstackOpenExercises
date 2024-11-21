@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
   const [show, setShow] = useState(true)
@@ -29,7 +30,8 @@ const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
     <div style={blogStyle}>
       {show ? (
         <div className='blog'>
-          {blog.title} {blog.author} <button onClick={viewDetails}>view</button>
+          <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+          {/* <button onClick={viewDetails}>view</button> */}
         </div>
       ) : (
         <div>

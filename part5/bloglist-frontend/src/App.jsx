@@ -9,6 +9,10 @@ import { showNotification } from './reducers/notificationReducer'
 import { useDispatch, useSelector } from 'react-redux'
 import { initializeBlogs, setBlogs } from "./reducers/blogsReducer"
 import { setUser } from './reducers/userReducer'
+import Users from './components/Users'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import IndividualUser from './components/individualUser'
+import IndividualBlog from './components/IndividualBlog'
 
 const App = () => {
   const dispatch = useDispatch()
@@ -148,7 +152,7 @@ const App = () => {
     )
   }
 
-  const blogForm = () => {
+  const top = () => {
     return (
       <div>
         <h2>blogs</h2>
@@ -167,6 +171,13 @@ const App = () => {
           <br />
           <br />
         </div>
+      </div>
+    )
+  }
+
+  const blogForm = () => {
+    return (
+      <div>
         {createBlogForm()}
         {blogs.map((blog) => (
           <Blog key={blog.id} blog={blog} handleUpdateLikes={handleUpdateLikes} handleDeleteBlog={handleDelete}/>
@@ -176,9 +187,20 @@ const App = () => {
   }
 
   return (
-    <div>
-      {user === null ? loginForm() : blogForm()}
-    </div>
+    <BrowserRouter>
+      <div>
+        {user ? top() : null}
+      </div>
+    
+      <Routes>
+        <Route path='/users' element={<Users/>}/>
+        <Route path='/blogs/:blogId' element={<IndividualBlog />}/>
+        <Route path='/users/:userId' element={<IndividualUser/>}/>
+        <Route path='/login' element={loginForm()}/>
+        <Route path='/' element={user === null ? loginForm() : blogForm()}/>
+      </Routes>
+    </BrowserRouter>
+    
   )
 }
 
