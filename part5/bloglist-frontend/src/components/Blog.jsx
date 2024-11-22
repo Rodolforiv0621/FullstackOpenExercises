@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 
 const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
@@ -28,24 +29,16 @@ const Blog = ({ blog, handleUpdateLikes, handleDeleteBlog }) => {
 
   return (
     <div style={blogStyle}>
-      {show ? (
+      
         <div className='blog'>
           <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
           {/* <button onClick={viewDetails}>view</button> */}
         </div>
-      ) : (
+      
         <div>
-          <div>
-            {blog.title} <button onClick={viewDetails}>hide</button>
-          </div>
-          <div>{blog.url}</div>
-          <div data-testid='likes'>
-            {blog.likes} <button onClick={handleLike}>like</button>
-          </div>
-          <div>{blog.author}</div>
-          {blog.currentUser ? (<button onClick={handleDelete}>remove</button>) : (<></>)}
+          {blog.currentUser ? (<Button onClick={handleDelete}>remove</Button>) : (<></>)}
         </div>
-      )}
+      
     </div>
   )
 

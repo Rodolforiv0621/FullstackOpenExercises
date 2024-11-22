@@ -10,9 +10,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { initializeBlogs, setBlogs } from "./reducers/blogsReducer"
 import { setUser } from './reducers/userReducer'
 import Users from './components/Users'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import IndividualUser from './components/individualUser'
 import IndividualBlog from './components/IndividualBlog'
+import { Button, Form, Nav, Navbar } from 'react-bootstrap'
 
 const App = () => {
   const dispatch = useDispatch()
@@ -77,8 +78,10 @@ const App = () => {
   const handleCreateBlog = async (title, author, url) => {
     if(title === '' || author === '' || url === '') return
     blogFormRef.current.toggleVisibility()
+    
     try{
       let newBlog = await blogService.create(title, author, url)
+      
       newBlog = { ...newBlog, currentUser: true }
       dispatch(setBlogs(blogs.concat(newBlog)))
 
@@ -112,31 +115,35 @@ const App = () => {
   const loginForm = () => {
     return (
 
-      <form onSubmit={handleLogin}>
+      <Form onSubmit={handleLogin}>
         <h2>Log in</h2>
         <Message />
-        <div>
+        <Form.Group>
+        <Form.Label>
           username
-          <input
+          <Form.Control
             type="text"
             value={username}
             data-testid="username"
             name="username"
             onChange={({ target }) => setUsername(target.value)}
           />
-        </div>
-        <div>
+        </Form.Label>
+        </Form.Group>
+        <Form.Group>
+        <Form.Label>
           password
-          <input
+          <Form.Control
             type="password"
             value={password}
             data-testid="password"
             name="password"
             onChange={({ target }) => setPassword(target.value)}
           />
-        </div>
-        <button type="submit">login</button>
-      </form>
+        </Form.Label>
+        </Form.Group>
+        <Button variant='primary' type="submit">login</Button>
+      </Form>
 
     )
   }
@@ -153,24 +160,41 @@ const App = () => {
   }
 
   const top = () => {
+    const style = {
+      padding: 5
+    }
     return (
       <div>
-        <h2>blogs</h2>
         <Message />
-        <div>
-          {' '}
-          {user.name} logged in
-          <button
-            onClick={() => {
-              window.localStorage.removeItem('loggedBlogappUser')
-              window.location.reload()
-            }}
-          >
-            logout
-          </button>
-          <br />
-          <br />
-        </div>
+        <Navbar collapseOnSelect expand='lg' bg='dark' variant='dark'>
+          <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+          <Navbar.Collapse>
+            <Nav className='me-auto'>
+              <Nav.Link as="span">
+                <Link style={style} to="/">home</Link>
+              </Nav.Link>
+              <Nav.Link as='span'>
+                <Link style={style} to='/users'>users</Link>
+              </Nav.Link>
+            
+            
+            {' '}
+            {user.name} logged in
+            <Button
+              onClick={() => {
+                window.localStorage.removeItem('loggedBlogappUser')
+                window.location.reload()
+              }}
+            >
+              logout
+            </Button>
+            </Nav>
+          </Navbar.Collapse>
+          
+          </Navbar>
+          <h2>blog app</h2>
+          
+        
       </div>
     )
   }
@@ -187,7 +211,8 @@ const App = () => {
   }
 
   return (
-    <BrowserRouter>
+    <div className='container'>
+      <BrowserRouter>
       <div>
         {user ? top() : null}
       </div>
@@ -200,6 +225,8 @@ const App = () => {
         <Route path='/' element={user === null ? loginForm() : blogForm()}/>
       </Routes>
     </BrowserRouter>
+    </div>
+    
     
   )
 }
