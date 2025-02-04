@@ -100,7 +100,7 @@ let books = [
 
 const typeDefs = `
   type Author {
-    name: String
+    name: String!
     id: ID!
     born: Int
     bookCount: Int
@@ -127,7 +127,7 @@ const typeDefs = `
     author: String!
     published: Int!
     genres: [String!]!
-    ): Book,
+    ): Book
     editAuthor(name: String!, setBornTo: Int!): Author
   }
 `;
@@ -167,8 +167,10 @@ const resolvers = {
     },
     editAuthor: (root, args) => {
       const author = authors.find(author => author.name === args.name)
+
       if(!author) return null
       author.born = args.setBornTo
+      
       return author
     }
   }
