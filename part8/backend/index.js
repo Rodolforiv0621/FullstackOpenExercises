@@ -184,36 +184,38 @@ const resolvers = {
       
       if (args.author) {
         // Assuming args.author is the identifier for the author
+        // const author = await Author.findOne({ name: args.author})
+        // console.log(author)
         filter.author = args.author;
       }
       
       // Use Mongoose to find the matching books.
       // Populate the author field so that the Book type's author property is a full Author object.
-      return await Book.find(filter);
+      return await Book.find(filter).populate('author');
     },
     allAuthors: async () => {
       const authors = await Author.find({});
+      return authors
+      // const bookCounts = await Book.aggregate([
+      //   {
+      //     $group: {
+      //       _id: "$author",         // Group books by the 'author' field.
+      //       count: { $sum: 1 }       // Sum the number of books in each group.
+      //     }
+      //   }
+      // ]);
 
-      const bookCounts = await Book.aggregate([
-        {
-          $group: {
-            _id: "$author",         // Group books by the 'author' field.
-            count: { $sum: 1 }       // Sum the number of books in each group.
-          }
-        }
-      ]);
+      // // 3. Create a mapping from author id to their book count.
+      // const countMap = bookCounts.reduce((acc, curr) => {
+      //   acc[curr._id.toString()] = curr.count;
+      //   return acc;
+      // }, {});
 
-      // 3. Create a mapping from author id to their book count.
-      const countMap = bookCounts.reduce((acc, curr) => {
-        acc[curr._id.toString()] = curr.count;
-        return acc;
-      }, {});
-
-      // 4. Return each author, merging in the computed bookCount.
-      return authors.map(author => ({
-        ...author.toObject(),  // Convert the Mongoose document to a plain JavaScript object.
-        bookCount: countMap[author._id.toString()] || 0  // Default to 0 if no books found.
-      }));
+      // // 4. Return each author, merging in the computed bookCount.
+      // return authors.map(author => ({
+      //   ...author.toObject(),  // Convert the Mongoose document to a plain JavaScript object.
+      //   bookCount: countMap[author._id.toString()] || 0  // Default to 0 if no books found.
+      // }));
 
 
 
@@ -280,7 +282,13 @@ const resolvers = {
       // return book
     },
     editAuthor: async (root, args, context) => {
-      
+      if(!context.currentUser){
+        throw new GraphQLError('Not authorized', {
+          extensions: {
+            code: 'UNAUTHENTICATED',
+          }
+        })
+      }
       const author = await Author.findOne({ name: args.name });
 
       author.born = args.setBornTo;
