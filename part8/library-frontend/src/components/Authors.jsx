@@ -20,6 +20,7 @@ const Authors = (props) => {
     return <div>loading...</div>
   }
   if(result.error){
+    console.log(result.error)
     return <div>Failed</div>
   }
   const authors = result.data.allAuthors
@@ -53,7 +54,10 @@ const Authors = (props) => {
           ))}
         </tbody>
       </table>
-      <h3>Set Birthyear</h3>
+      {props.token ? (
+        <>
+        
+        <h3>Set Birthyear</h3>
       <form onSubmit={submit}>
         <div>
           name
@@ -77,6 +81,11 @@ const Authors = (props) => {
         </div>
         <button type="submit">update author</button>
       </form>
+      </>
+      ):(
+        <></>
+      )}
+      
     </div>
   )
 }

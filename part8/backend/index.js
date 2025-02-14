@@ -195,7 +195,24 @@ const resolvers = {
     },
     allAuthors: async () => {
       const authors = await Author.find({});
-      return authors
+      // console.log(authors)
+      const books = await Book.find({}).populate('author');
+      
+      const authorsWithBookCount = authors.map(author => {
+        // Filter the books array for those whose populated author name matches this author's name.
+        const count = books.filter(book => book.author.name === author.name).length;
+        
+        // Return the author with an added property for bookCount.
+        return {
+          ...author.toObject(),// Convert the Mongoose document to a plain object.
+          id: author._id.toString(),
+          bookCount: count
+        };
+      });
+    
+      return authorsWithBookCount
+
+      // return authors
       // const bookCounts = await Book.aggregate([
       //   {
       //     $group: {
@@ -331,8 +348,8 @@ const resolvers = {
       return user;
     },
     login: async (root, args) => {
-      const user = await user.findOne({username: args.username})
-
+      const user = await User.findOne({username: args.username})
+      
       if(!user || args.password !== 'secret'){
         throw new GraphQLError('Invalid credentials', {
           extensions: {
@@ -362,7 +379,7 @@ startStandaloneServer(server, {
     const auth = req ? req.headers.authorization : null
     if(auth && auth.startsWith('Bearer ')){
       const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
-      const currentUser = await user.findById(decodedToken.id)
+      const currentUser = await User.findById(decodedToken.id)
       return { currentUser }
     }
   }
