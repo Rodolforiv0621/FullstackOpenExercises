@@ -1,25 +1,43 @@
-import { useQuery } from "@apollo/client"
+import { useLazyQuery } from "@apollo/client"
 import { ALL_BOOKS } from "../queries"
+import { useState, useEffect} from "react"
 
 const Books = (props) => {
-  const result = useQuery(ALL_BOOKS)
+  const [genre, setGenre] = useState("all")
+  const [getBooks, {loading, data, error, refetch}] = useLazyQuery(ALL_BOOKS)
+
+  useEffect(() => {
+    getBooks({ variables: { genre: genre === 'all' ? null : genre }})
+  }, [getBooks, genre])
 
   if (!props.show) {
     return null
   }
-  if (result.loading){
-    return <div>loading...</div>
-  }
-  if (result.error){
-    return <div>Failed book information request</div>
+
+  const getGenres = async (e) => {
+    
+    const selectedGenre = e.target.value
+    setGenre(selectedGenre)
+    console.log(selectedGenre)
+    refetch({variables: { genre: selectedGenre === 'all' ? null : selectedGenre}})
+    .catch((err) => {
+      console.error("Refetch error:", err);
+    });
   }
 
-  const books = result.data.allBooks
+  if (loading){
+    return <div>loading...</div>
+  }
+  if (error){
+    return <div>Failed book information request</div>
+  }
+  
+  const books = data ? data.allBooks : []
 
   return (
     <div>
       <h2>books</h2>
-
+      <p>in genre {genre}</p>
       <table>
         <tbody>
           <tr>
@@ -36,6 +54,15 @@ const Books = (props) => {
           ))}
         </tbody>
       </table>
+      <div>
+        <button onClick={getGenres} value={"refactoring"}>refactoring</button>
+        <button onClick={getGenres} value={"agile"}>agile</button>
+        <button onClick={getGenres} value={"patterns"}>patterns</button>
+        <button onClick={getGenres} value={"design"}>design</button>
+        <button onClick={getGenres} value={"crime"}>crime</button>
+        <button onClick={getGenres} value={"classic"}>classic</button>
+        <button onClick={getGenres} value={"all"}>all genres</button>
+      </div>
     </div>
   )
 }

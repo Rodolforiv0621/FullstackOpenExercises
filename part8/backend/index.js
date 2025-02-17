@@ -176,8 +176,9 @@ const resolvers = {
     authorCount: async () => Author.collection.countDocuments(),
     allBooks: async (root, args) => {
       const filter = {};
-  
+      
       if (args.genre) {
+        
         // Wrap args.genre in an array to use with $in
         filter.genres = { $in: [args.genre] };
       }
