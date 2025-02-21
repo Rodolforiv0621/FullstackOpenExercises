@@ -5,10 +5,22 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { GraphQLError } = require("graphql");
+const {expressMiddlewar, expressMiddleware} = require('@apollo/server/express4')
+const { ApolloServerPluginDrainHttpServer } = require('@apollo/server/plugin/drainHttpServer')
+const { makeExecutableSchema } = require('@graphql-tools/schema')
+const express = require('express')
+const cors = require('cors')
+const http = require('http')
+
+const typeDefs = require('./schema')
+const resolvers = require('./resolvers')
 
 const Author = require("./models/author");
 const Book = require("./models/book");
 const User = require("./models/user");
+
+const {webSocketServer, WebSocketServer} = require('ws')
+const { useServer } = require('graphql-ws/lib/use/ws')
 
 const MONGODB_URI = process.env.MONGODB_URI;
 console.log("connecting to", MONGODB_URI);
@@ -117,273 +129,79 @@ let books = [
   you can remove the placeholder query once your first one has been implemented 
 */
 
-const typeDefs = `
-  type Author {
-    name: String!
-    id: ID!
-    born: Int
-    bookCount: Int
-  }
-
-  type Book {
-    title: String!
-    published: Int!
-    author: Author!
-    id: ID!
-    genres: [String!]
-  }
-
-  type User {
-    username: String!
-    favoriteGenre: String!
-    id: ID!
-  }
-
-  type Token {
-    value: String!
-  }
-
-  type Query {
-    bookCount: Int!,
-    authorCount: Int!,
-    allBooks(author: String, genre: String): [Book!]!,
-    allAuthors: [Author!]!,
-    me: User
-  }
-
-  type Mutation {
-    addBook(
-      title: String!
-      author: String!
-      published: Int!
-      genres: [String!]!
-    ): Book!
-    editAuthor(name: String!, setBornTo: Int!): Author
-    createUser(
-      username: String!
-      favoriteGenre: String!
-    ): User
-    login(
-      username: String!
-      password: String!
-    ): Token
-  }
-`;
-
-const resolvers = {
-  Query: {
-    bookCount: async () => Book.collection.countDocuments(),
-    authorCount: async () => Author.collection.countDocuments(),
-    allBooks: async (root, args) => {
-      const filter = {};
-      
-      if (args.genre) {
-        
-        // Wrap args.genre in an array to use with $in
-        filter.genres = { $in: [args.genre] };
-      }
-      
-      if (args.author) {
-        // Assuming args.author is the identifier for the author
-        // const author = await Author.findOne({ name: args.author})
-        // console.log(author)
-        filter.author = args.author;
-      }
-      
-      // Use Mongoose to find the matching books.
-      // Populate the author field so that the Book type's author property is a full Author object.
-      return await Book.find(filter).populate('author');
-    },
-    allAuthors: async () => {
-      const authors = await Author.find({});
-      // console.log(authors)
-      const books = await Book.find({}).populate('author');
-      
-      const authorsWithBookCount = authors.map(author => {
-        // Filter the books array for those whose populated author name matches this author's name.
-        const count = books.filter(book => book.author.name === author.name).length;
-        
-        // Return the author with an added property for bookCount.
-        return {
-          ...author.toObject(),// Convert the Mongoose document to a plain object.
-          id: author._id.toString(),
-          bookCount: count
-        };
-      });
-    
-      return authorsWithBookCount
-
-      // return authors
-      // const bookCounts = await Book.aggregate([
-      //   {
-      //     $group: {
-      //       _id: "$author",         // Group books by the 'author' field.
-      //       count: { $sum: 1 }       // Sum the number of books in each group.
-      //     }
-      //   }
-      // ]);
-
-      // // 3. Create a mapping from author id to their book count.
-      // const countMap = bookCounts.reduce((acc, curr) => {
-      //   acc[curr._id.toString()] = curr.count;
-      //   return acc;
-      // }, {});
-
-      // // 4. Return each author, merging in the computed bookCount.
-      // return authors.map(author => ({
-      //   ...author.toObject(),  // Convert the Mongoose document to a plain JavaScript object.
-      //   bookCount: countMap[author._id.toString()] || 0  // Default to 0 if no books found.
-      // }));
 
 
 
-      // return authors.map( author => ({
-      //   ...author,
-      //   bookCount: books.filter(book => book.author === author.name).length,
-      // }));
-    },
-    me: async (root, args, context) => {
-      if(!context.currentUser){
-        throw new GraphQLError('Not authorized', {
-          extensions: {
-            code: 'UNAUTHENTICATED',
-          }
-        })
-      }
-      return context.currentUser;
-    }
-  },
-  Mutation: {
-    addBook: async (root, args, context) => {
-      if(!context.currentUser){
-        throw new GraphQLError('Not authorized', {
-          extensions: {
-            code: 'UNAUTHENTICATED',
-          }
-        })
-      }
-      let author = await Author.findOne({ name: args.author });
-      if (!author) {
-        author = new Author({ name: args.author });
-        try {
-          await author.save();
-        } catch (error) {
-          throw new GraphQLError('Saving author failed', {
-            extensions: {
-              code: 'BAD_USER_INPUT',
-              invalidArgs: args.author,
-              error
+// Using standalone server, not meant for production
+
+// const server = new ApolloServer({
+//   typeDefs,
+//   resolvers,
+// });
+
+// startStandaloneServer(server, {
+//   listen: { port: 4000 },
+//   context: async ({ req, res }) => {
+//     const auth = req ? req.headers.authorization : null
+//     if(auth && auth.startsWith('Bearer ')){
+//       const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
+//       const currentUser = await User.findById(decodedToken.id)
+//       return { currentUser }
+//     }
+//   }
+// }).then(({ url }) => {
+//   console.log(`Server ready at ${url}`);
+// });
+
+const start = async () => {
+  const app = express()
+  const httpServer = http.createServer(app)
+
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: '/'
+  })
+
+  const schema = makeExecutableSchema({ typeDefs, resolvers})
+  const serverCleanup = useServer({schema}, wsServer)
+
+  const server = new ApolloServer({
+    schema,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose()
             }
-          })
+          }
         }
       }
-      const book = new Book({ ...args, author: author._id });
-      
-      try {
-        await book.save();
-      } catch (error) {
-          throw new GraphQLError('Saving book failed', {
-            extensions: {
-              code: 'BAD_USER_INPUT',
-              invalidArgs: args.name,
-              error
-            }
-          })
+    ],
+  })
+
+  await server.start()
+
+  app.use('/', cors(), express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => {
+        const auth = req ? req.headers.authorization : null
+        if (auth && auth.startsWith('Bearer ')) {
+          const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
+          const currentUser = User.findById(decodedToken.id)
+
+          return {currentUser}
         }
-        
-        return book.populate('author')
-      // if(!authors.some(author => author.name === args.author)){
-      //   authors = authors.concat({ name: args.author, id: uuid()})
-      // }
-      // const book = {title: args.title, author: args.author, published: args.published, genres: args.genres, id: uuid()}
-      // books = books.concat(book)
-      // return book
-    },
-    editAuthor: async (root, args, context) => {
-      if(!context.currentUser){
-        throw new GraphQLError('Not authorized', {
-          extensions: {
-            code: 'UNAUTHENTICATED',
-          }
-        })
       }
-      const author = await Author.findOne({ name: args.name });
+    })
+  )
 
-      author.born = args.setBornTo;
+    const PORT = 4000
 
-      try { 
-        await author.save();
-      } catch (error) {
-        throw new GraphQLError('Author update failed', {
-          extensions: {
-            code: 'BAD_USER_INPUT',
-            invalidArgs: args.name,
-            error
-          }
-        })
-      }
-
-      return author
-      // const author = authors.find(author => author.name === args.name)
-
-      // if(!author) return null
-      // author.born = args.setBornTo
-      
-      // return author
-    },
-    createUser: async (root, args) => {
-      const user = new User({ ...args });
-
-      try {
-        await user.save();
-      } catch (error) {
-        throw new GraphQLError('Creating user failed', {
-          extensions: {
-            code: 'BAD_USER_INPUT',
-            invalidArgs: args.name,
-            error
-          }
-        })
-      }
-
-      return user;
-    },
-    login: async (root, args) => {
-      const user = await User.findOne({username: args.username})
-      
-      if(!user || args.password !== 'secret'){
-        throw new GraphQLError('Invalid credentials', {
-          extensions: {
-            code: 'BAD_USER_INPUT'
-          }
-        })
-      }
-
-      const userForToken = {
-        username: user.username,
-        id: user._id
-      }
-
-      return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
-    }
-  }
+    httpServer.listen(PORT, ()=>{
+      console.log(`Server is now running on http://localhost:${PORT}`)
+    })
 }
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+start()
 
-startStandaloneServer(server, {
-  listen: { port: 4000 },
-  context: async ({ req, res }) => {
-    const auth = req ? req.headers.authorization : null
-    if(auth && auth.startsWith('Bearer ')){
-      const decodedToken = jwt.verify(auth.substring(7), process.env.JWT_SECRET)
-      const currentUser = await User.findById(decodedToken.id)
-      return { currentUser }
-    }
-  }
-}).then(({ url }) => {
-  console.log(`Server ready at ${url}`);
-});

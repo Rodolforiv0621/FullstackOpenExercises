@@ -1,14 +1,16 @@
-import { useLazyQuery } from "@apollo/client"
+import { useLazyQuery, useQuery } from "@apollo/client"
 import { ALL_BOOKS } from "../queries"
 import { useState, useEffect} from "react"
 
 const Books = (props) => {
   const [genre, setGenre] = useState("all")
-  const [getBooks, {loading, data, error, refetch}] = useLazyQuery(ALL_BOOKS)
+  const {loading, data, error} = useQuery(ALL_BOOKS, {
+    variables: {genre: genre === "all" ? null : genre}
+  })
 
-  useEffect(() => {
-    getBooks({ variables: { genre: genre === 'all' ? null : genre }})
-  }, [getBooks, genre])
+  // useEffect(() => {
+  //   getBooks({ variables: { genre: genre === 'all' ? null : genre }})
+  // }, [getBooks, genre])
 
   if (!props.show) {
     return null
@@ -18,11 +20,11 @@ const Books = (props) => {
     
     const selectedGenre = e.target.value
     setGenre(selectedGenre)
-    console.log(selectedGenre)
-    refetch({variables: { genre: selectedGenre === 'all' ? null : selectedGenre}})
-    .catch((err) => {
-      console.error("Refetch error:", err);
-    });
+    
+    // refetch({variables: { genre: selectedGenre === 'all' ? null : selectedGenre}})
+    // .catch((err) => {
+    //   console.error("Refetch error:", err);
+    // });
   }
 
   if (loading){
