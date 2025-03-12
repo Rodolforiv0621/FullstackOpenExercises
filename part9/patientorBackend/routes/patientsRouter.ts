@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import express from 'express';
 import patientsService from '../services/patientsService';
+import { newPatientsEntry } from '../types';
+import utils from '../utils';
+import z from 'zod';
 
 const router = express.Router();
 
@@ -9,14 +11,19 @@ router.get('/', (_req, res) => {
 });
 
 router.post('/', (req, res) => {
-    const {name, dateOfBirth, ssn, gender, occupation} = req.body;
-    const addedEntry = patientsService.addPatient({
-        name,
-        dateOfBirth,
-        ssn,
-        gender,
-        occupation
-    });
-    res.send(addedEntry);
+    try{
+        const newPatientsEntry: newPatientsEntry = utils.toNewPatientsEntry(req.body);
+
+        const addedEntry = patientsService.addPatient(newPatientsEntry);
+
+        res.send(addedEntry);
+    }catch(error: unknown){
+       if(error instanceof z.ZodError){
+        res.status(400).send({ error: error.issues });
+       }else{
+        res.status(400).send({ error: 'unknown' });
+       }
+    }
+    
 });
 export default router;
