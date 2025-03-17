@@ -7,4 +7,9 @@ router.get('/', (_req, res) => {
     res.send(diagnosisService.getDiagnosisEntries());
 });
 
+router.get('/:id', (req, res) => {
+    const code = req.params.id;
+    res.send(diagnosisService.getDiagnosisDescription(code));
+});
+
 export default router;

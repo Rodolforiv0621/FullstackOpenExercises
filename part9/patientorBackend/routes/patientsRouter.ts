@@ -1,6 +1,6 @@
 import express from 'express';
 import patientsService from '../services/patientsService';
-import { newPatientsEntry } from '../types';
+import { newPatientsEntry, patientsEntry } from '../types';
 import utils from '../utils';
 import z from 'zod';
 
@@ -8,6 +8,17 @@ const router = express.Router();
 
 router.get('/', (_req, res) => {
     res.send(patientsService.getNonSensitivePatientsEntries());
+});
+
+
+router.get('/:id', (req, res) => {
+    const patient: patientsEntry | undefined = patientsService.getPatient(req.params.id);
+    if (patient){
+        res.status(200).send(patient);
+    }else{
+        res.status(404).send("No patient found");
+    }
+    
 });
 
 router.post('/', (req, res) => {
