@@ -1,6 +1,6 @@
 import express from 'express';
 import patientsService from '../services/patientsService';
-import { newPatientsEntry, patientsEntry } from '../types';
+import { Entry, newPatientsEntry, patientsEntry } from '../types';
 import utils from '../utils';
 import z from 'zod';
 
@@ -37,4 +37,14 @@ router.post('/', (req, res) => {
     }
     
 });
+
+router.post('/:id/entries', (req, res) => {
+    const id = req.params.id;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+    const object: any = req.body;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const newEntry: Entry | null = patientsService.addPatientEntry(object, id);
+    res.send(newEntry);
+});
+
 export default router;

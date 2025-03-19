@@ -23,9 +23,7 @@ export type nonSensitivePatientsEntries = Omit<patientsEntry, 'ssn'>;
 export type newPatientsEntry = Omit<patientsEntry, 'id'>;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Entry {
-   
-}
+export type Entry = OccupationalHealthcareEntry | HospitalEntry | HealthCheckEntry;
 
 export interface Patient {
     id: string;
@@ -37,7 +35,7 @@ export interface Patient {
     entries: Entry[]
 }
 
-interface baseEntry {
+export interface baseEntry {
     id: string;
     description: string;
     date: string;
@@ -46,10 +44,11 @@ interface baseEntry {
 } 
 
 export interface OccupationalHealthcareEntry extends baseEntry{
-    sickLeave: {
+    sickLeave?: {
         startDate: string;
         endDate: string;
     }
+    employerName?: string;
     type: "OccupationalHealthcare";
 
 }
@@ -60,4 +59,9 @@ export interface HospitalEntry extends baseEntry{
         criteria: string;
     }
     type: "Hospital";
+}
+
+export interface HealthCheckEntry extends baseEntry {
+    healthCheckRating: number;
+    type: "HealthCheck"
 }

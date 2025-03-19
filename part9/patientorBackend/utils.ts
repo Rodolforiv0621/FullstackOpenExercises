@@ -1,4 +1,4 @@
-import { Gender, newPatientsEntry } from "./types";
+import { Gender, newPatientsEntry, diagnosisEntry } from "./types";
 import z from 'zod';
 
 const isString = (text: unknown): text is string => {
@@ -51,9 +51,19 @@ const toNewPatientsEntry = (object: unknown): newPatientsEntry => {
     throw new Error("Some fields are missing");
 };
 
+const parseDiagnosisCodes = (object: unknown): Array<diagnosisEntry['code']> =>  {
+    if (!object || typeof object !== 'object' || !('diagnosisCodes' in object)) {
+      // we will just trust the data to be in correct form
+      return [] as Array<diagnosisEntry['code']>;
+    }
+  
+    return object.diagnosisCodes as Array<diagnosisEntry['code']>;
+  };
+
 export default {
     toNewPatientsEntry,
     parseDate,
     parseGender,
-    parseText
+    parseText,
+    parseDiagnosisCodes
 };
